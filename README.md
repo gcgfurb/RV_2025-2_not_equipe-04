@@ -5,7 +5,12 @@ Favor utilizar as respectivas pastas para postar os trabalhos de cada unidade.
 
 Alunos:  
 
-Assunto:  
+- Felipe Augusto de Carvalho de Araujo
+- Ari Elias da Silva Júnior
+- Luigi Garcia Marchetti
+- Micael Luan Conti
+
+Assunto: RA - Realidade Aumentada  
 
 ## [Atividades da Unidade 1](unidade_1 "Atividades da Unidade 1")  
 
