@@ -1,0 +1,5 @@
+D:/Furb/CG/RV_2025-2_not_equipe-04/unidade_4/Projeto/.utmp/RelWithDebInfo/04s412r4/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/Furb/CG/RV_2025-2_not_equipe-04/unidade_4/Projeto/.utmp/RelWithDebInfo/04s412r4/arm64-v8a/CMakeFiles/rebuild_cache.dir
+D:/Furb/CG/RV_2025-2_not_equipe-04/unidade_4/Projeto/.utmp/RelWithDebInfo/04s412r4/arm64-v8a/GameActivity/CMakeFiles/game.dir
+D:/Furb/CG/RV_2025-2_not_equipe-04/unidade_4/Projeto/.utmp/RelWithDebInfo/04s412r4/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+D:/Furb/CG/RV_2025-2_not_equipe-04/unidade_4/Projeto/.utmp/RelWithDebInfo/04s412r4/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir

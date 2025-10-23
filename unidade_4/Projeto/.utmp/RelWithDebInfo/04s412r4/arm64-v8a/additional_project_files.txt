@@ -1,0 +1,17 @@
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\GAToUnityCallbacks.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\MacroEnd.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\MacroHeaderBegin.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\MacroSourceBegin.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGAApplication.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGAConfiguration.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGADebug.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGAEvents.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGAInput.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGASoftKeyboard.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGASoftKeyboardCallbacks.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGATypes.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UGAVersion.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UnityToGACallbacks.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UnityToGAConfigurationCallbacks.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UnityToGAKeyEventCallbacks.h
+D:\Furb\CG\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\UnityToGAMotionEventCallbacks.h
