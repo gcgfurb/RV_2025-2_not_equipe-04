@@ -369,6 +369,8 @@ GameObject:
   - component: {fileID: 469206973}
   - component: {fileID: 469206972}
   - component: {fileID: 469206975}
+  - component: {fileID: 469206977}
+  - component: {fileID: 469206976}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -494,6 +496,43 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &469206976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469206971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b781f75f77d1e944187f75716fb0246b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _arCamera: {fileID: 469206977}
+  _arGameObjects: []
+  _updateTarget: 0
+  _calculateARMatrixInLateUpdate: 1
+  _updateTransformInLateUpdate: 1
+--- !u!114 &469206977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469206971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3c58b28916434a4eb8981c6532d66e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _screenWidth: 640
+  _screenHeight: 480
+  _imageWidth: 640
+  _imageHeight: 480
+  _translation: {x: 0, y: 0}
+  _scale: {x: 1, y: 1}
+  _camMatrixValues: []
+  _distCoeffsValues: []
 --- !u!1 &620930625
 GameObject:
   m_ObjectHideFlags: 0
