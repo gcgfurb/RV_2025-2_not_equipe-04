@@ -113,6 +113,7 @@ public class ArUcoWordManager : MonoBehaviour
     // Start
     void Start()
     {
+        currentDifficulty = GameManager.Instance.dificuldadeAtual;
         mainCamera = Camera.main; 
         source2MatHelper = gameObject.GetComponent<MultiSource2MatHelper>();
         source2MatHelper.OutputColorFormat = Source2MatHelperColorFormat.RGBA;
@@ -141,19 +142,18 @@ public class ArUcoWordManager : MonoBehaviour
         instantiatedWordObjects = new Dictionary<string, GameObject>();
 
         // --- MUDANÇA: Não inicia o jogo automaticamente ---
-        // StartNewGame(); // Removido daqui
+        StartGame(); // Removido daqui
     }
 
-    #region Funções Públicas (API do Jogo)
+    #region Funções Públicas
 
     /// <summary>
     /// Esta é a função principal para iniciar o jogo.
     /// Chame isso a partir de um botão de UI (ex: "Fácil", "Médio").
     /// </summary>
-    public void StartGame(Dificuldade difficulty)
+    public void StartGame()
     {
-        Debug.Log($"Iniciando jogo com dificuldade: {difficulty}");
-        currentDifficulty = difficulty;
+        Debug.Log($"Iniciando jogo com dificuldade: {currentDifficulty}");
         isGameActive = true;
         SortNewWord(); // Sorteia a primeira palavra
     }
@@ -488,24 +488,24 @@ public class ArUcoWordManager : MonoBehaviour
     /// <summary>
     /// Atalho para o botão "Fácil".
     /// </summary>
-    public void IniciarJogoFacil()
-    {
-        StartGame(Dificuldade.Facil);
-    }
+    //public void IniciarJogoFacil()
+    //{
+    //    StartGame(Dificuldade.Facil);
+    //}
 
-    /// <summary>
-    /// Atalho para o botão "Médio".
-    /// </summary>
-    public void IniciarJogoMedio()
-    {
-        StartGame(Dificuldade.Medio);
-    }
+    ///// <summary>
+    ///// Atalho para o botão "Médio".
+    ///// </summary>
+    //public void IniciarJogoMedio()
+    //{
+    //    StartGame(Dificuldade.Medio);
+    //}
 
-    /// <summary>
-    /// Atalho para o botão "Difícil".
-    /// </summary>
-    public void IniciarJogoDificil()
-    {
-        StartGame(Dificuldade.Dificil);
-    }
+    ///// <summary>
+    ///// Atalho para o botão "Difícil".
+    ///// </summary>
+    //public void IniciarJogoDificil()
+    //{
+    //    StartGame(Dificuldade.Dificil);
+    //}
 }
