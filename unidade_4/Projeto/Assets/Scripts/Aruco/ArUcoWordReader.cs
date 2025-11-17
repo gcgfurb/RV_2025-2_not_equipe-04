@@ -7,6 +7,7 @@ using OpenCVForUnity.ObjdetectModule;
 using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.UnityIntegration;
 using OpenCVForUnity.UnityIntegration.Helper.Source2Mat;
+using TMPro;
 #if !OPENCV_DONT_USE_WEBCAMTEXTURE_API
 #endif
 
@@ -46,9 +47,9 @@ public class ArUcoWordManager : MonoBehaviour
 
     [Header("Links da UI")]
     [Tooltip("Arraste o Texto da UI para a dica (ex: 'B _ _ _')")]
-    public Text wordHintText;
+    public TextMeshProUGUI wordHintText;
     [Tooltip("Arraste o Texto da UI para a palavra formada (ex: 'BAO')")]
-    public Text wordOutputText; 
+    public TextMeshProUGUI wordOutputText; 
     [Tooltip("Arraste a RawImage que exibe a câmera")]
     public RawImage outputRawImage;
     public bool displayProcessedImage = true;
@@ -238,7 +239,7 @@ public class ArUcoWordManager : MonoBehaviour
         if (displayProcessedImage && outputRawImage != null)
         {
             outputRawImage.texture = outputTexture;
-            outputRawImage.rectTransform.sizeDelta = new Vector2(rgbaMat.cols(), rgbaMat.rows());
+            //outputRawImage.rectTransform.sizeDelta = new Vector2(rgbaMat.cols(), rgbaMat.rows());
         }
 
         // Configuração da Câmera (Dummy)
