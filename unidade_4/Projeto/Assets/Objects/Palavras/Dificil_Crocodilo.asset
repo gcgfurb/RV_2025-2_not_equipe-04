@@ -15,6 +15,6 @@ MonoBehaviour:
   word: CROCODILO
   silabas: []
   categoria: 0
-  somDoAnimal: {fileID: 0}
+  somDoAnimal: {fileID: 8300000, guid: 12501dd5221d68f42960f31143c52879, type: 3}
   modelo3D: {fileID: 1962661241923896, guid: e0e6ac992a860c4468d220dfdd803cab, type: 3}
   dificuldade: 2
