@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45e956c6e42b2104aade1605d8dff9d4, type: 3}
   m_Name: Facil_Cervo
   m_EditorClassIdentifier: 
-  word: CERVO
+  word: CAD
   silabas: []
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: 9f5591bf0410147a3ab3dd80de160b1b, type: 3}

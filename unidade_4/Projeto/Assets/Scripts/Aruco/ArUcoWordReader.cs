@@ -54,6 +54,8 @@ public class ArUcoWordManager : MonoBehaviour
     public RawImage outputRawImage;
     public bool displayProcessedImage = true;
 
+    [Header("UI do Som")]
+    public Button playSoundButton;
 
     // --- Variáveis de Jogo ---
     private WordData correctWordData; 
@@ -142,8 +144,10 @@ public class ArUcoWordManager : MonoBehaviour
         
         instantiatedWordObjects = new Dictionary<string, GameObject>();
 
-        // --- MUDANÇA: Não inicia o jogo automaticamente ---
-        StartGame(); // Removido daqui
+        if (playSoundButton != null) playSoundButton.interactable = false;
+
+        StartGame(); 
+
     }
 
     #region Funções Públicas
@@ -171,6 +175,7 @@ public class ArUcoWordManager : MonoBehaviour
         
         if(wordHintText != null) wordHintText.text = "";
         if(wordOutputText != null) wordOutputText.text = "";
+        if (playSoundButton != null) playSoundButton.interactable = false;
 
         // Cria um resultado vazio para esconder todos os objetos
         ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
@@ -181,8 +186,10 @@ public class ArUcoWordManager : MonoBehaviour
     /// </summary>
     public void PlayCurrentWordSound()
     {
+        Debug.LogWarning("Botão de som clicado, mas nenhum animal está 321312312312 m,icaxl.");
         if (activeWordData != null && activeWordData.somDoAnimal != null)
         {
+            Debug.LogWarning("Botão de som clicado, mas nenhum animal está ativvivivivio.");
             if (!audioSource.isPlaying)
             {
                 Debug.Log($"Tocando som (via botão) para: {activeWordData.word}");
@@ -223,7 +230,8 @@ public class ArUcoWordManager : MonoBehaviour
                 wordHintText.text += " _";
             }
         }
-        
+
+        if (playSoundButton != null) playSoundButton.interactable = false;
         lastPlayedWord = "";
         ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
     }
@@ -400,6 +408,7 @@ public class ArUcoWordManager : MonoBehaviour
         {
             lastPlayedWord = ""; // Reseta o som
             activeWordData = null;
+            if (playSoundButton != null) playSoundButton.interactable = false;
             return;
         }
 
@@ -407,6 +416,7 @@ public class ArUcoWordManager : MonoBehaviour
         if (wordDataDictionary.TryGetValue(result.FormedWord, out WordData data)) 
         {
             activeWordData = data; // Define o animal ativo
+            if (playSoundButton != null) playSoundButton.interactable = true;
             GameObject prefab = data.modelo3D; 
             if (prefab == null) return;
 
