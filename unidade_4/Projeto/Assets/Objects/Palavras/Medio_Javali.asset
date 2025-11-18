@@ -15,7 +15,7 @@ MonoBehaviour:
   word: JAVALI
   silabas: []
   categoria: 0
-  somDoAnimal: {fileID: 0}
+  somDoAnimal: {fileID: 8300000, guid: 2537ce234d5ccf94a9bd4bf61db95d50, type: 3}
   modelo3D: {fileID: 4623556101495578335, guid: 1ef54cdace3ccbe438a80867c3b80014,
     type: 3}
   dificuldade: 1
