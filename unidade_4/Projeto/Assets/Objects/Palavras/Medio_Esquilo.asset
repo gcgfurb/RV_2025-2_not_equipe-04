@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: Medio_Esquilo
   m_EditorClassIdentifier: 
   word: ESQUILO
-  silabas: []
+  silabas:
+  - ES
+  - QUI
+  - LO
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: 7d4bb7ea67924ee49812b9d4ab39a770, type: 3}
   modelo3D: {fileID: 6073855695995191056, guid: c18682d3e4c3fbf4cbf14216af86a1d9,

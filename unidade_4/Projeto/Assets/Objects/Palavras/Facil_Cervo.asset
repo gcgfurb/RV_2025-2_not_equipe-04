@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: Facil_Cervo
   m_EditorClassIdentifier: 
   word: CERVO
-  silabas: []
+  silabas:
+  - CER
+  - VO
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: 9f5591bf0410147a3ab3dd80de160b1b, type: 3}
   modelo3D: {fileID: 1567582185033856, guid: 3a9b422ae305e3b49aadf8ece0bfa915, type: 3}

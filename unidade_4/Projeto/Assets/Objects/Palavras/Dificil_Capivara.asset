@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: Dificil_Capivara
   m_EditorClassIdentifier: 
   word: CAPIVARA
-  silabas: []
+  silabas:
+  - CA
+  - PI
+  - VA
+  - RA
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: dc92824ad5264164bb51876381f54dd7, type: 3}
   modelo3D: {fileID: 1416869289173647271, guid: 52c27c90b44d9f34f875c70f433c5b1b,

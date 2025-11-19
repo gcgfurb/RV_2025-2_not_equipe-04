@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: Facil_Urso
   m_EditorClassIdentifier: 
   word: URSO
-  silabas: []
+  silabas:
+  - UR
+  - SO
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: aafad6057d8ff4b439280f5000d370a3, type: 3}
   modelo3D: {fileID: 2640427843547389826, guid: 3a0231a7c7cebc94a9c879da75e5394c,

@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: Dificil_Suricato
   m_EditorClassIdentifier: 
   word: SURICATO
-  silabas: []
+  silabas:
+  - SU
+  - RI
+  - CA
+  - TO
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: dd7bc9a6077565b47b1da57fb79d6826, type: 3}
   modelo3D: {fileID: 4822514016950882064, guid: 04906f38c0cd14465a28b829240a9b15,

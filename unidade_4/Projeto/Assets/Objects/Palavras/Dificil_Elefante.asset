@@ -13,7 +13,11 @@ MonoBehaviour:
   m_Name: Dificil_Elefante
   m_EditorClassIdentifier: 
   word: ELEFANTE
-  silabas: []
+  silabas:
+  - E
+  - LE
+  - FAN
+  - TE
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: b35c1c3bd50044296bca679047b59c69, type: 3}
   modelo3D: {fileID: 919132149155446097, guid: dff19ef2edc9bc04c8f342b40e07e2a1, type: 3}

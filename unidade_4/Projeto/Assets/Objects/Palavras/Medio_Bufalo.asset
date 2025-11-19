@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: Medio_Bufalo
   m_EditorClassIdentifier: 
   word: "B\xDAFALO"
-  silabas: []
+  silabas:
+  - "B\xDA"
+  - FA
+  - LO
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: 341ef6c1d2b7bb144addfde6a2d52ce4, type: 3}
   modelo3D: {fileID: 8852232825506041196, guid: aa90861098184534f840458a3b768a12,

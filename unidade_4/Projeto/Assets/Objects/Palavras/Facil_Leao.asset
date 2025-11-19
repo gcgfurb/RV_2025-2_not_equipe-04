@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: Facil_Leao
   m_EditorClassIdentifier: 
   word: "LE\xC3O"
-  silabas: []
+  silabas:
+  - LE
+  - "\xC3O"
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: b194adad6850f6946bb08b72da140606, type: 3}
   modelo3D: {fileID: 994537013139176287, guid: d3517ef964b038b4a8b796f8f3c79849, type: 3}
