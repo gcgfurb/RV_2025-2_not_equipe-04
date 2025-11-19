@@ -12,7 +12,7 @@ using TMPro;
 #endif
 
 [RequireComponent(typeof(MultiSource2MatHelper))]
-[RequireComponent(typeof(AudioSource))] 
+[RequireComponent(typeof(AudioSource))]
 public class ArUcoWordManager : MonoBehaviour
 {
     // O struct 'DetectedMarker' é público para que
@@ -20,8 +20,8 @@ public class ArUcoWordManager : MonoBehaviour
     public struct DetectedMarker
     {
         public int id;
-        public Point center; 
-        public Vector3 unityCameraSpacePosition; 
+        public Point center;
+        public Vector3 unityCameraSpacePosition;
         public Quaternion unityRotation;
         public int originalCornersIndex;
     }
@@ -29,10 +29,10 @@ public class ArUcoWordManager : MonoBehaviour
     [Header("Banco de Palavras (ScriptableObjects)")]
     [Tooltip("Arraste todos os seus assets 'WordData' para esta lista")]
     public List<WordData> allWordsDatabase;
-    
+
     [Header("Configuração da Palavra (Letras)")]
     public List<MarkerCode> markerCodes;
-    
+
     [Header("Configuração de Detecção")]
     public ArUcoDictionary dictionaryName = ArUcoDictionary.DICT_6X6_50;
     public float markerLengthMeters = 0.055f;
@@ -55,12 +55,15 @@ public class ArUcoWordManager : MonoBehaviour
     [Header("UI do Som")]
     public Button playSoundButton;
 
+    [Header("UI de Progresso")]
+    public Button nextWordButton;
+
     // --- Variáveis de Jogo ---
-    private WordData correctWordData; 
-    private string lastPlayedWord = ""; 
+    private WordData correctWordData;
+    private string lastPlayedWord = "";
     private WordData activeWordData = null;
     private Dificuldade currentDifficulty;
-    
+
     // --- MUDANÇA AQUI: Variável de Estado ---
     private bool isGameActive = false;
 
@@ -75,16 +78,17 @@ public class ArUcoWordManager : MonoBehaviour
     private RefineParameters refineParameters;
     private List<Mat> corners, rejectedCorners;
     private Mat ids;
-    private MatOfPoint3f objectPoints; 
-    
+    private MatOfPoint3f objectPoints;
+
     // --- Dicionários de Gerenciamento ---
-    private Dictionary<int, string> codesDictionary; 
+    private Dictionary<int, string> codesDictionary;
     private Dictionary<string, WordData> wordDataDictionary;
     private Dictionary<string, GameObject> instantiatedWordObjects;
-    
-    private Camera mainCamera; 
+    private List<WordData> remainingWords;
+
+    private Camera mainCamera;
     private AudioSource audioSource;
-    
+
     private readonly Scalar colorCorrect = new(0, 255, 0, 255); // Verde
     private readonly Scalar colorWrong = new(255, 0, 0, 255);   // Vermelho
 
@@ -115,11 +119,11 @@ public class ArUcoWordManager : MonoBehaviour
     void Start()
     {
         currentDifficulty = GameManager.Instance.dificuldadeAtual;
-        mainCamera = Camera.main; 
+        mainCamera = Camera.main;
         source2MatHelper = gameObject.GetComponent<MultiSource2MatHelper>();
         source2MatHelper.OutputColorFormat = Source2MatHelperColorFormat.RGBA;
         source2MatHelper.Initialize();
-        
+
         audioSource = GetComponent<AudioSource>();
 
         // Popula os dicionários para acesso rápido
@@ -139,12 +143,12 @@ public class ArUcoWordManager : MonoBehaviour
                 wordDataDictionary.Add(wordData.word, wordData);
             }
         }
-        
+
         instantiatedWordObjects = new Dictionary<string, GameObject>();
 
         if (playSoundButton != null) playSoundButton.interactable = false;
 
-        StartGame(); 
+        StartGame();
 
     }
 
@@ -158,6 +162,12 @@ public class ArUcoWordManager : MonoBehaviour
     {
         Debug.Log($"Iniciando jogo com dificuldade: {currentDifficulty}");
         isGameActive = true;
+
+        remainingWords = allWordsDatabase
+           .Where(w => w != null && w.dificuldade == currentDifficulty)
+           .OrderBy(x => Random.value)   // embaralhar
+           .ToList();
+
         SortNewWord(); // Sorteia a primeira palavra
     }
 
@@ -170,16 +180,16 @@ public class ArUcoWordManager : MonoBehaviour
         Debug.Log("Parando o jogo.");
         isGameActive = false;
         correctWordData = null;
-        
-        if(wordHintText != null) wordHintText.text = "";
-        if(wordOutputText != null) wordOutputText.text = "";
+
+        if (wordHintText != null) wordHintText.text = "";
+        if (wordOutputText != null) wordOutputText.text = "";
         if (silabasOutputText != null) silabasOutputText.text = "";
         if (playSoundButton != null) playSoundButton.interactable = false;
 
         // Cria um resultado vazio para esconder todos os objetos
         ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
     }
-    
+
     /// <summary>
     /// Função pública para o botão da UI tocar o som do animal ativo.
     /// </summary>
@@ -201,40 +211,52 @@ public class ArUcoWordManager : MonoBehaviour
         }
     }
 
+    public void OnNextWordPressed()
+    {
+        SortNewWord();
+    }
+
     #endregion
 
     /// <summary>
     /// Sorteia uma nova palavra com base na dificuldade atual.
     /// </summary>
-    private void SortNewWord() // Renomeado de StartNewGame para clareza
+    private void SortNewWord()
     {
-        List<WordData> availableWords = allWordsDatabase.Where(w => w != null && w.dificuldade == currentDifficulty).ToList();
-
-        if (availableWords.Count == 0)
+        if (remainingWords == null || remainingWords.Count == 0)
         {
-            Debug.LogError($"Nenhuma palavra encontrada para a dificuldade: {currentDifficulty}.");
-            correctWordData = null;
-            isGameActive = false; // Para o jogo se não houver palavras
-            return;
+            // Recomeça o ciclo
+            remainingWords = allWordsDatabase
+                .Where(w => w != null && w.dificuldade == currentDifficulty)
+                .OrderBy(x => Random.value)
+                .ToList();
         }
 
-        correctWordData = availableWords[Random.Range(0, availableWords.Count)];
-        Debug.Log($"--- NOVO JOGO --- Palavra Correta: {correctWordData.word}");
+        // Pega a primeira palavra do pool
+        correctWordData = remainingWords[0];
+        remainingWords.RemoveAt(0);
 
+        Debug.Log($"--- NOVA PALAVRA --- {correctWordData.word}");
+
+        // Atualiza dica
         if (wordHintText != null)
         {
             wordHintText.text = $"{correctWordData.word[0]}";
             for (int i = 1; i < correctWordData.word.Length; i++)
-            {
                 wordHintText.text += " _";
-            }
         }
 
-        if (playSoundButton != null) playSoundButton.interactable = false;
-        lastPlayedWord = "";
-        ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
+        if (silabasOutputText != null)
+            silabasOutputText.text = "";
+
+        if (playSoundButton != null)
+            playSoundButton.interactable = false;
+
+        if (nextWordButton != null)
+            nextWordButton.interactable = false;
     }
-    
+
+
     // OnSourceToMatHelperInitialized
     public void OnSourceToMatHelperInitialized()
     {
@@ -262,24 +284,24 @@ public class ArUcoWordManager : MonoBehaviour
         if (markerLengthMeters <= 0)
         {
             Debug.LogError($"[ERRO FATAL] 'Marker Length Meters' é {markerLengthMeters}.");
-            markerLengthMeters = 0.1f; 
+            markerLengthMeters = 0.1f;
         }
         Debug.Log($"[LOG INICIALIZAÇÃO] Usando Marker Length de {markerLengthMeters} metros.");
-        
+
         // Configuração dos Pontos 3D do Marcador (modelo)
         float halfMarkerLength = markerLengthMeters / 2.0f;
         objectPoints = new MatOfPoint3f(
-            new Point3(-halfMarkerLength,  halfMarkerLength, 0),
-            new Point3( halfMarkerLength,  halfMarkerLength, 0),
-            new Point3( halfMarkerLength, -halfMarkerLength, 0),
+            new Point3(-halfMarkerLength, halfMarkerLength, 0),
+            new Point3(halfMarkerLength, halfMarkerLength, 0),
+            new Point3(halfMarkerLength, -halfMarkerLength, 0),
             new Point3(-halfMarkerLength, -halfMarkerLength, 0)
         );
 
         // Configuração do Detector ArUco (com parâmetros robustos)
         dictionary = Objdetect.getPredefinedDictionary((int)dictionaryName);
-        detectorParameters = new DetectorParameters(); 
+        detectorParameters = new DetectorParameters();
         detectorParameters.set_minDistanceToBorder(3);
-        detectorParameters.set_useAruco3Detection(true); 
+        detectorParameters.set_useAruco3Detection(true);
         detectorParameters.set_cornerRefinementMethod(Objdetect.CORNER_REFINE_SUBPIX);
         detectorParameters.set_minSideLengthCanonicalImg(16);
         detectorParameters.set_errorCorrectionRate(0.8);
@@ -294,16 +316,16 @@ public class ArUcoWordManager : MonoBehaviour
         Debug.Log("Detector ArUco (v3.0.0) com Estimativa de Pose pronto.");
 
         // Correção de Espelhamento
-        #if !OPENCV_DONT_USE_WEBCAMTEXTURE_API
+#if !OPENCV_DONT_USE_WEBCAMTEXTURE_API
         if (source2MatHelper.Source2MatHelper is WebCamTexture2MatHelper webCamHelper)
         {
-             if (webCamHelper.IsFrontFacing())
+            if (webCamHelper.IsFrontFacing())
             {
-                webCamHelper.FlipHorizontal = true; 
+                webCamHelper.FlipHorizontal = true;
                 Debug.LogWarning("--- WEBCAM FRONTAL DETECTADA --- Ativando 'FlipHorizontal' para corrigir espelhamento.");
             }
         }
-        #endif
+#endif
     }
 
     /// <summary>
@@ -318,15 +340,15 @@ public class ArUcoWordManager : MonoBehaviour
             rgbaMat = source2MatHelper.GetMat();
 
             // 2. VERIFICA SE O JOGO ESTÁ ATIVO
-            if (!isGameActive || correctWordData == null || markerLengthMeters <= 0) 
+            if (!isGameActive || correctWordData == null || markerLengthMeters <= 0)
             {
                 // Se o jogo não estiver ativo, limpa os desenhos (caso haja lixo)
-                if(!isGameActive)
+                if (!isGameActive)
                 {
                     ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
-                    if(wordOutputText != null) wordOutputText.text = "";
+                    if (wordOutputText != null) wordOutputText.text = "";
                 }
-                
+
                 // Apenas exibe a imagem "crua" da câmera e sai.
                 if (displayProcessedImage)
                 {
@@ -334,18 +356,18 @@ public class ArUcoWordManager : MonoBehaviour
                 }
                 return; // Sai do Update
             }
-            
+
             // --- O JOGO ESTÁ ATIVO, EXECUTA A LÓGICA COMPLETA ---
-            
+
             // 3. Processa a imagem (converte para cinza e detecta)
             Imgproc.cvtColor(rgbaMat, grayMat, Imgproc.COLOR_RGBA2GRAY);
             detector.detectMarkers(grayMat, corners, ids, rejectedCorners);
-            
+
             // 4. Converte os dados brutos do OpenCV em nossa lista de marcadores com pose 3D
             List<DetectedMarker> allMarkers = MarkerProcessingUtils.ProcessDetectedMarkers(
                 corners, ids, objectPoints, camMatrix, distCoeffs
             );
-            
+
             // 5. Filtra os marcadores para encontrar o maior grupo
             List<DetectedMarker> mainCluster = MarkerProcessingUtils.FindLargestCluster(allMarkers, maxMarkerDistance);
 
@@ -353,16 +375,16 @@ public class ArUcoWordManager : MonoBehaviour
             WordAnalysisResult analysisResult = MarkerProcessingUtils.AnalyzeCluster(
                 mainCluster, correctWordData, codesDictionary
             );
-            
+
             // 7. Desenha o feedback (verde/vermelho) na imagem
             MarkerProcessingUtils.DrawMarkerFeedback(
-                rgbaMat, corners, analysisResult.SortedMarkers, 
+                rgbaMat, corners, analysisResult.SortedMarkers,
                 analysisResult.LetterCorrectness, colorCorrect, colorWrong
             );
 
             // 8. Gerencia o objeto 3D (mostra/esconde) e toca o som
             ManageWordObject(analysisResult);
-            
+
             // 9. Atualiza os textos da UI
             if (wordOutputText != null)
             {
@@ -397,13 +419,13 @@ public class ArUcoWordManager : MonoBehaviour
     private void ManageWordObject(WordAnalysisResult result)
     {
         // Esconde todos os objetos primeiro
-        foreach (var obj in instantiatedWordObjects.Values) 
-        { 
-            if (obj != null) obj.SetActive(false); 
+        foreach (var obj in instantiatedWordObjects.Values)
+        {
+            if (obj != null) obj.SetActive(false);
         }
-        
+
         // Se a palavra não estiver correta ou não houver palavra, sai
-        if (!result.IsWordCorrect) 
+        if (!result.IsWordCorrect)
         {
             lastPlayedWord = ""; // Reseta o som
             activeWordData = null;
@@ -413,13 +435,15 @@ public class ArUcoWordManager : MonoBehaviour
         }
 
         // Tenta encontrar a palavra no banco de dados
-        if (wordDataDictionary.TryGetValue(result.FormedWord, out WordData data)) 
+        if (wordDataDictionary.TryGetValue(result.FormedWord, out WordData data))
         {
             activeWordData = data; // Define o animal ativo
             if (playSoundButton != null) playSoundButton.interactable = true;
-            silabasOutputText.text = string.Join("-", data.silabas);
+            if (silabasOutputText != null) silabasOutputText.text = string.Join("-", data.silabas);
+            if (nextWordButton != null) nextWordButton.interactable = true;
+
             Debug.Log(string.Join("-", data.silabas));
-            GameObject prefab = data.modelo3D; 
+            GameObject prefab = data.modelo3D;
             if (prefab == null) return;
 
             // Converte a pose média para o Espaço do Mundo
@@ -440,7 +464,7 @@ public class ArUcoWordManager : MonoBehaviour
                 {
                     instance = Instantiate(prefab, worldPos, Quaternion.identity);
                     instance.transform.localScale = worldScale;
-                    instantiatedWordObjects[result.FormedWord] = instance; 
+                    instantiatedWordObjects[result.FormedWord] = instance;
                 }
             }
             else
@@ -482,7 +506,7 @@ public class ArUcoWordManager : MonoBehaviour
         if (objectPoints != null) objectPoints.Dispose();
         foreach (var obj in instantiatedWordObjects.Values) { if (obj != null) Destroy(obj); }
     }
-    
+
     public void OnSourceToMatHelperDisposed()
     {
         Debug.Log("OnSourceToMatHelperDisposed");
