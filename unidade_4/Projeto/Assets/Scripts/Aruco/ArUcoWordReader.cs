@@ -40,16 +40,14 @@ public class ArUcoWordManager : MonoBehaviour
     [Header("Configuração de Agrupamento")]
     [Tooltip("Distância máxima (em metros) entre dois marcadores para serem parte do mesmo grupo.")]
     public float maxMarkerDistance = 0.1f;
-    
-    [Header("Configuração de Objetos 3D")]
-    [Tooltip("Multiplicador para o tamanho do objeto. 1 = tamanho real do marcador.")]
-    public float scaleMultiplier = 1.0f;
 
     [Header("Links da UI")]
     [Tooltip("Arraste o Texto da UI para a dica (ex: 'B _ _ _')")]
     public TextMeshProUGUI wordHintText;
     [Tooltip("Arraste o Texto da UI para a palavra formada (ex: 'BAO')")]
-    public TextMeshProUGUI wordOutputText; 
+    public TextMeshProUGUI wordOutputText;
+    [Tooltip("Arraste o Texto da UI para as silabras da palavra formada (ex: 'GA-TO')")]
+    public TextMeshProUGUI silabasOutputText;
     [Tooltip("Arraste a RawImage que exibe a câmera")]
     public RawImage outputRawImage;
     public bool displayProcessedImage = true;
@@ -175,6 +173,7 @@ public class ArUcoWordManager : MonoBehaviour
         
         if(wordHintText != null) wordHintText.text = "";
         if(wordOutputText != null) wordOutputText.text = "";
+        if (silabasOutputText != null) silabasOutputText.text = "";
         if (playSoundButton != null) playSoundButton.interactable = false;
 
         // Cria um resultado vazio para esconder todos os objetos
@@ -409,6 +408,7 @@ public class ArUcoWordManager : MonoBehaviour
             lastPlayedWord = ""; // Reseta o som
             activeWordData = null;
             if (playSoundButton != null) playSoundButton.interactable = false;
+            if (silabasOutputText != null) silabasOutputText.text = "";
             return;
         }
 
@@ -417,13 +417,15 @@ public class ArUcoWordManager : MonoBehaviour
         {
             activeWordData = data; // Define o animal ativo
             if (playSoundButton != null) playSoundButton.interactable = true;
+            silabasOutputText.text = string.Join("-", data.silabas);
+            Debug.Log(string.Join("-", data.silabas));
             GameObject prefab = data.modelo3D; 
             if (prefab == null) return;
 
             // Converte a pose média para o Espaço do Mundo
             Vector3 worldPos = mainCamera.transform.TransformPoint(result.AveragePosition_CamSpace);
             Quaternion worldRot = mainCamera.transform.rotation * result.AnchorRotation_CamSpace;
-            Vector3 worldScale = Vector3.one * markerLengthMeters * scaleMultiplier;
+            Vector3 worldScale = Vector3.one * markerLengthMeters * data.scale;
 
             GameObject instance;
             if (instantiatedWordObjects.TryGetValue(result.FormedWord, out instance))
