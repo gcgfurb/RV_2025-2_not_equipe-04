@@ -58,9 +58,11 @@ public class ArUcoWordManager : MonoBehaviour
     [Header("UI de Progresso")]
     public Button nextWordButton;
 
+    [Header("Efeitos Visuais")]
+    public GameObject confettiPrefab;
+
     // --- Variáveis de Jogo ---
     private WordData correctWordData;
-    private string lastPlayedWord = "";
     private WordData activeWordData = null;
     private Dificuldade currentDifficulty;
 
@@ -79,6 +81,7 @@ public class ArUcoWordManager : MonoBehaviour
     private List<Mat> corners, rejectedCorners;
     private Mat ids;
     private MatOfPoint3f objectPoints;
+    private bool hasCelebrated = false;
 
     // --- Dicionários de Gerenciamento ---
     private Dictionary<int, string> codesDictionary;
@@ -254,6 +257,8 @@ public class ArUcoWordManager : MonoBehaviour
 
         if (nextWordButton != null)
             nextWordButton.interactable = false;
+
+        hasCelebrated = false;
     }
 
 
@@ -427,7 +432,6 @@ public class ArUcoWordManager : MonoBehaviour
         // Se a palavra não estiver correta ou não houver palavra, sai
         if (!result.IsWordCorrect)
         {
-            lastPlayedWord = ""; // Reseta o som
             activeWordData = null;
             if (playSoundButton != null) playSoundButton.interactable = false;
             if (silabasOutputText != null) silabasOutputText.text = "";
@@ -450,6 +454,8 @@ public class ArUcoWordManager : MonoBehaviour
             Vector3 worldPos = mainCamera.transform.TransformPoint(result.AveragePosition_CamSpace);
             Quaternion worldRot = mainCamera.transform.rotation * result.AnchorRotation_CamSpace;
             Vector3 worldScale = Vector3.one * markerLengthMeters * data.scale;
+
+      
 
             GameObject instance;
             if (instantiatedWordObjects.TryGetValue(result.FormedWord, out instance))
@@ -474,6 +480,14 @@ public class ArUcoWordManager : MonoBehaviour
                 instantiatedWordObjects.Add(result.FormedWord, instance);
             }
 
+            // --- EFEITO DE CONFETE ---
+            if (!hasCelebrated)
+            {
+                SpawnConfetti(worldPos);
+                hasCelebrated = true;
+            }
+
+
             // Aplica a rotação "em pé"
             Vector3 markerForward = worldRot * Vector3.forward;
             Quaternion standingRotation = Quaternion.LookRotation(markerForward, Vector3.up);
@@ -484,6 +498,33 @@ public class ArUcoWordManager : MonoBehaviour
             activeWordData = null; // Palavra formada não está no banco de dados
         }
     }
+
+    private void SpawnConfetti(Vector3 worldPos)
+    {
+        if (confettiPrefab != null)
+        {
+            GameObject confetti = Instantiate(
+                confettiPrefab,
+                worldPos + Vector3.up * 0.4f,
+                Quaternion.identity
+            );
+
+            var ps = confetti.GetComponentInChildren<ParticleSystem>();
+            if (ps != null)
+            {
+                var main = ps.main;
+                main.startLifetime = 1.5f;   // partículas duram mais tempo
+                main.startSpeed = 1.0f;      // sobe devagar
+                main.gravityModifier = 0.1f; // cai bem devagar
+
+                var emission = ps.emission;
+                emission.rateOverTime = 10f; // mais partículas por segundo (opcional)
+            }
+
+            Destroy(confetti, 3f);
+        }
+    }
+
 
 
     // --- Métodos de Limpeza ---

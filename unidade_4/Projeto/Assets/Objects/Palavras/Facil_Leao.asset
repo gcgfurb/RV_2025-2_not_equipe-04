@@ -20,3 +20,4 @@ MonoBehaviour:
   somDoAnimal: {fileID: 8300000, guid: b194adad6850f6946bb08b72da140606, type: 3}
   modelo3D: {fileID: 994537013139176287, guid: d3517ef964b038b4a8b796f8f3c79849, type: 3}
   dificuldade: 0
+  scale: 3

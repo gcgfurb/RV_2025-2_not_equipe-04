@@ -609,6 +609,8 @@ MonoBehaviour:
   displayProcessedImage: 1
   playSoundButton: {fileID: 1408193924}
   nextWordButton: {fileID: 455996621}
+  confettiPrefab: {fileID: 3064453622967830428, guid: 4fe5d28f55ee41b439e29acf1c63d5ca,
+    type: 3}
 --- !u!82 &305413973
 AudioSource:
   m_ObjectHideFlags: 0
