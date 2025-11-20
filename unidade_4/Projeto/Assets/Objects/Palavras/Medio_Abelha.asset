@@ -22,3 +22,4 @@ MonoBehaviour:
   modelo3D: {fileID: 6704114002416517447, guid: 54bba22b2b4a4204394ab80c4fccdc80,
     type: 3}
   dificuldade: 1
+  scale: 6

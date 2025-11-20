@@ -61,6 +61,9 @@ public class ArUcoWordManager : MonoBehaviour
     [Header("Efeitos Visuais")]
     public GameObject confettiPrefab;
 
+    [Header("Debug Props")]
+    public List<WordData> debugWordsDatabase;
+
     // --- Variáveis de Jogo ---
     private WordData correctWordData;
     private WordData activeWordData = null;
@@ -128,6 +131,12 @@ public class ArUcoWordManager : MonoBehaviour
         source2MatHelper.Initialize();
 
         audioSource = GetComponent<AudioSource>();
+
+        if (debugWordsDatabase != null && debugWordsDatabase.Count > 0)
+        {
+            allWordsDatabase = debugWordsDatabase;
+            Debug.LogWarning("Banco de palavras de depuração ativo!");
+        }
 
         // Popula os dicionários para acesso rápido
         codesDictionary = new Dictionary<int, string>();
