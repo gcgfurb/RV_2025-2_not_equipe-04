@@ -784,7 +784,7 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 70
   m_fontSizeMax: 100
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
@@ -1711,7 +1711,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 2532, y: 500}
+  m_SizeDelta: {x: 2532, y: 700}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2001860848
 MonoBehaviour:
@@ -1746,5 +1746,5 @@ SceneRoots:
   - {fileID: 1531861222}
   - {fileID: 1273627795}
   - {fileID: 1806921045}
-  - {fileID: 1839078753}
   - {fileID: 1703576468}
+  - {fileID: 1839078753}
