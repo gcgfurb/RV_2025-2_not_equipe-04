@@ -8,6 +8,7 @@ using OpenCVForUnity.ImgprocModule;
 using OpenCVForUnity.UnityIntegration;
 using OpenCVForUnity.UnityIntegration.Helper.Source2Mat;
 using TMPro;
+
 #if !OPENCV_DONT_USE_WEBCAMTEXTURE_API
 #endif
 
@@ -15,8 +16,6 @@ using TMPro;
 [RequireComponent(typeof(AudioSource))]
 public class ArUcoWordManager : MonoBehaviour
 {
-    // O struct 'DetectedMarker' é público para que
-    // a classe auxiliar 'MarkerProcessingUtils' possa usá-lo.
     public struct DetectedMarker
     {
         public int id;
@@ -40,6 +39,30 @@ public class ArUcoWordManager : MonoBehaviour
     [Header("Configuração de Agrupamento")]
     [Tooltip("Distância máxima (em metros) entre dois marcadores para serem parte do mesmo grupo.")]
     public float maxMarkerDistance = 0.1f;
+
+    [Header("Estabilidade e Posição (Correções)")]
+    [Tooltip("Faz o objeto olhar sempre para a câmera (ignora rotação do papel). Ajuda muito na estabilidade.")]
+    public bool faceCamera = true;
+
+    [Header("Estabilidade e Posição")]
+    [Tooltip("Se ATIVADO: O animal fica sempre em pé (alinhado com a gravidade), mesmo se inclinar o papel. Se DESATIVADO: O animal cola no papel (vira junto com ele).")]
+    public bool useGravityAlignment = true;
+
+    [Tooltip("Suavização do movimento. 0.1 a 0.3 é o ideal.")]
+    [Range(0.01f, 1.0f)]
+    public float smoothingFactor = 0.2f;
+
+    [Tooltip("Ajuste a Rotação Base (X, Y, Z). Use isso para girar o boneco para ficar de frente para onde você quer.")]
+    public Vector3 rotationOffset = Vector3.zero;
+
+    [Tooltip("Ajuste a Posição Base (X, Y, Z).")]
+    public Vector3 positionOffset = Vector3.zero;
+
+    // Variáveis internas de suavização
+    private Vector3 smoothedPosition;
+    private Quaternion smoothedRotation;
+    private bool hasInitialPose = false;
+    // -----------------------------------------------------------
 
     [Header("Links da UI")]
     [Tooltip("Arraste o Texto da UI para a dica (ex: 'B _ _ _')")]
@@ -69,7 +92,6 @@ public class ArUcoWordManager : MonoBehaviour
     private WordData activeWordData = null;
     private Dificuldade currentDifficulty;
 
-    // --- MUDANÇA AQUI: Variável de Estado ---
     private bool isGameActive = false;
 
     // --- Variáveis Internas do OpenCV ---
@@ -166,27 +188,19 @@ public class ArUcoWordManager : MonoBehaviour
 
     #region Funções Públicas
 
-    /// <summary>
-    /// Esta é a função principal para iniciar o jogo.
-    /// Chame isso a partir de um botão de UI (ex: "Fácil", "Médio").
-    /// </summary>
     public void StartGame()
     {
         Debug.Log($"Iniciando jogo com dificuldade: {currentDifficulty}");
         isGameActive = true;
 
         remainingWords = allWordsDatabase
-           .Where(w => w != null && w.dificuldade == currentDifficulty)
-           .OrderBy(x => Random.value)   // embaralhar
-           .ToList();
+            .Where(w => w != null && w.dificuldade == currentDifficulty)
+            .OrderBy(x => Random.value)   // embaralhar
+            .ToList();
 
         SortNewWord(); // Sorteia a primeira palavra
     }
 
-    /// <summary>
-    /// Para o jogo, limpa a UI e esconde os objetos.
-    /// Chame isso a partir de um botão "Voltar ao Menu".
-    /// </summary>
     public void StopGame()
     {
         Debug.Log("Parando o jogo.");
@@ -207,19 +221,12 @@ public class ArUcoWordManager : MonoBehaviour
     /// </summary>
     public void PlayCurrentWordSound()
     {
-        Debug.LogWarning("Botão de som clicado, mas nenhum animal está 321312312312 m,icaxl.");
         if (activeWordData != null && activeWordData.somDoAnimal != null)
         {
-            Debug.LogWarning("Botão de som clicado, mas nenhum animal está ativvivivivio.");
             if (!audioSource.isPlaying)
             {
-                Debug.Log($"Tocando som (via botão) para: {activeWordData.word}");
                 audioSource.PlayOneShot(activeWordData.somDoAnimal);
             }
-        }
-        else
-        {
-            Debug.LogWarning("Botão de som clicado, mas nenhum animal está ativo.");
         }
     }
 
@@ -244,9 +251,16 @@ public class ArUcoWordManager : MonoBehaviour
                 .ToList();
         }
 
-        // Pega a primeira palavra do pool
-        correctWordData = remainingWords[0];
-        remainingWords.RemoveAt(0);
+        if (remainingWords.Count > 0)
+        {
+            correctWordData = remainingWords[0];
+            remainingWords.RemoveAt(0);
+        }
+        else
+        {
+            Debug.LogError("Nenhuma palavra encontrada no banco de dados.");
+            return;
+        }
 
         Debug.Log($"--- NOVA PALAVRA --- {correctWordData.word}");
 
@@ -268,8 +282,11 @@ public class ArUcoWordManager : MonoBehaviour
             nextWordButton.interactable = false;
 
         hasCelebrated = false;
-    }
+        hasInitialPose = false; // Reseta a suavização para a nova palavra
 
+        // Limpa visualização anterior
+        ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
+    }
 
     // OnSourceToMatHelperInitialized
     public void OnSourceToMatHelperInitialized()
@@ -282,7 +299,6 @@ public class ArUcoWordManager : MonoBehaviour
         if (displayProcessedImage && outputRawImage != null)
         {
             outputRawImage.texture = outputTexture;
-            //outputRawImage.rectTransform.sizeDelta = new Vector2(rgbaMat.cols(), rgbaMat.rows());
         }
 
         // Configuração da Câmera (Dummy)
@@ -295,14 +311,10 @@ public class ArUcoWordManager : MonoBehaviour
         camMatrix.put(2, 0, 0); camMatrix.put(2, 1, 0); camMatrix.put(2, 2, 1.0f);
         distCoeffs = new MatOfDouble(0, 0, 0, 0);
 
-        if (markerLengthMeters <= 0)
-        {
-            Debug.LogError($"[ERRO FATAL] 'Marker Length Meters' é {markerLengthMeters}.");
-            markerLengthMeters = 0.1f;
-        }
         Debug.Log($"[LOG INICIALIZAÇÃO] Usando Marker Length de {markerLengthMeters} metros.");
+        if (markerLengthMeters <= 0) markerLengthMeters = 0.1f;
 
-        // Configuração dos Pontos 3D do Marcador (modelo)
+        // Configuração dos Pontos 3D do Marcador
         float halfMarkerLength = markerLengthMeters / 2.0f;
         objectPoints = new MatOfPoint3f(
             new Point3(-halfMarkerLength, halfMarkerLength, 0),
@@ -311,7 +323,7 @@ public class ArUcoWordManager : MonoBehaviour
             new Point3(-halfMarkerLength, -halfMarkerLength, 0)
         );
 
-        // Configuração do Detector ArUco (com parâmetros robustos)
+        // Configuração do Detector ArUco
         dictionary = Objdetect.getPredefinedDictionary((int)dictionaryName);
         detectorParameters = new DetectorParameters();
         detectorParameters.set_minDistanceToBorder(3);
@@ -322,14 +334,10 @@ public class ArUcoWordManager : MonoBehaviour
         refineParameters = new RefineParameters();
         detector = new ArucoDetector(dictionary, detectorParameters, refineParameters);
 
-        // Inicializa listas de detecção do OpenCV
         corners = new List<Mat>();
         ids = new Mat();
         rejectedCorners = new List<Mat>();
 
-        Debug.Log("Detector ArUco (v3.0.0) com Estimativa de Pose pronto.");
-
-        // Correção de Espelhamento
 #if !OPENCV_DONT_USE_WEBCAMTEXTURE_API
         if (source2MatHelper.Source2MatHelper is WebCamTexture2MatHelper webCamHelper)
         {
@@ -342,33 +350,25 @@ public class ArUcoWordManager : MonoBehaviour
 #endif
     }
 
-    /// <summary>
-    /// Loop principal, executado a cada frame.
-    /// Orquestra a detecção, processamento e apresentação.
-    /// </summary>
     void Update()
     {
         if (source2MatHelper.IsPlaying() && source2MatHelper.DidUpdateThisFrame())
         {
-            // 1. Pega o frame da câmera
             rgbaMat = source2MatHelper.GetMat();
 
-            // 2. VERIFICA SE O JOGO ESTÁ ATIVO
             if (!isGameActive || correctWordData == null || markerLengthMeters <= 0)
             {
-                // Se o jogo não estiver ativo, limpa os desenhos (caso haja lixo)
                 if (!isGameActive)
                 {
                     ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
                     if (wordOutputText != null) wordOutputText.text = "";
                 }
 
-                // Apenas exibe a imagem "crua" da câmera e sai.
                 if (displayProcessedImage)
                 {
                     OpenCVMatUtils.MatToTexture2D(rgbaMat, outputTexture);
                 }
-                return; // Sai do Update
+                return;
             }
 
             // --- O JOGO ESTÁ ATIVO, EXECUTA A LÓGICA COMPLETA ---
@@ -396,7 +396,7 @@ public class ArUcoWordManager : MonoBehaviour
                 analysisResult.LetterCorrectness, colorCorrect, colorWrong
             );
 
-            // 8. Gerencia o objeto 3D (mostra/esconde) e toca o som
+            // Gerencia Objeto 3D com Suavização e Offset
             ManageWordObject(analysisResult);
 
             // 9. Atualiza os textos da UI
@@ -432,61 +432,111 @@ public class ArUcoWordManager : MonoBehaviour
     /// </summary>
     private void ManageWordObject(WordAnalysisResult result)
     {
-        // Esconde todos os objetos primeiro
-        foreach (var obj in instantiatedWordObjects.Values)
+        // Esconde objetos não usados
+        foreach (var kvp in instantiatedWordObjects)
         {
-            if (obj != null) obj.SetActive(false);
+            if (kvp.Key != result.FormedWord && kvp.Value != null)
+                kvp.Value.SetActive(false);
         }
 
-        // Se a palavra não estiver correta ou não houver palavra, sai
         if (!result.IsWordCorrect)
         {
             activeWordData = null;
+            hasInitialPose = false;
             if (playSoundButton != null) playSoundButton.interactable = false;
             if (silabasOutputText != null) silabasOutputText.text = "";
             return;
         }
 
-        // Tenta encontrar a palavra no banco de dados
         if (wordDataDictionary.TryGetValue(result.FormedWord, out WordData data))
         {
-            activeWordData = data; // Define o animal ativo
+            activeWordData = data;
             if (playSoundButton != null) playSoundButton.interactable = true;
             if (silabasOutputText != null) silabasOutputText.text = string.Join("-", data.silabas);
             if (nextWordButton != null) nextWordButton.interactable = true;
 
-            Debug.Log(string.Join("-", data.silabas));
             GameObject prefab = data.modelo3D;
             if (prefab == null) return;
 
-            // Converte a pose média para o Espaço do Mundo
-            Vector3 worldPos = mainCamera.transform.TransformPoint(result.AveragePosition_CamSpace);
-            Quaternion worldRot = mainCamera.transform.rotation * result.AnchorRotation_CamSpace;
-            Vector3 worldScale = Vector3.one * markerLengthMeters * data.scale;
+            // --- 1. CÁLCULO DA POSIÇÃO (Suavizada) ---
+            // O result.AveragePosition_CamSpace JÁ É o centro do grupo de marcadores (centróide)
+            Vector3 targetLocalPos = result.AveragePosition_CamSpace;
+            Quaternion targetLocalRot = result.AnchorRotation_CamSpace;
 
-      
-
-            GameObject instance;
-            if (instantiatedWordObjects.TryGetValue(result.FormedWord, out instance))
+            if (!hasInitialPose)
             {
-                if (instance != null)
-                {
-                    instance.SetActive(true);
-                    instance.transform.position = worldPos;
-                    instance.transform.localScale = worldScale;
-                }
-                else
-                {
-                    instance = Instantiate(prefab, worldPos, Quaternion.identity);
-                    instance.transform.localScale = worldScale;
-                    instantiatedWordObjects[result.FormedWord] = instance;
-                }
+                smoothedPosition = targetLocalPos;
+                smoothedRotation = targetLocalRot;
+                hasInitialPose = true;
             }
             else
             {
-                instance = Instantiate(prefab, worldPos, Quaternion.identity);
-                instance.transform.localScale = worldScale;
+                float t = Mathf.Clamp01(smoothingFactor);
+                smoothedPosition = Vector3.Lerp(smoothedPosition, targetLocalPos, t);
+                smoothedRotation = Quaternion.Slerp(smoothedRotation, targetLocalRot, t);
+            }
+
+            // Converte para Mundo Unity
+            Vector3 worldPos = mainCamera.transform.TransformPoint(smoothedPosition);
+            Quaternion markerWorldRot = mainCamera.transform.rotation * smoothedRotation;
+            Vector3 worldScale = Vector3.one * markerLengthMeters * data.scale;
+
+            // --- 2. INSTANCIAÇÃO ---
+            GameObject instance;
+            if (!instantiatedWordObjects.TryGetValue(result.FormedWord, out instance))
+            {
+                instance = Instantiate(prefab);
                 instantiatedWordObjects.Add(result.FormedWord, instance);
+
+                // Desativa NavMesh para não bugar a posição
+                var agent = instance.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                if (agent != null) agent.enabled = false;
+            }
+
+            if (instance != null)
+            {
+                instance.SetActive(true);
+
+                // --- 3. CÁLCULO DA ROTAÇÃO (CORREÇÃO PEDIDA) ---
+
+                Quaternion finalRotation;
+
+                if (useGravityAlignment)
+                {
+                    // MODO "EM PÉ": O objeto ignora se o papel está inclinado para frente/trás.
+                    // Ele usa a direção "Para Frente" do marcador, mas projeta no chão (eixo Y zerado).
+
+                    // Pega o vetor "Forward" (frente) e "Up" (cima) do marcador
+                    Vector3 markerForward = markerWorldRot * Vector3.forward;
+                    Vector3 markerUp = markerWorldRot * Vector3.up;
+
+                    // Dependendo de como o OpenCV detecta, o "Up" do papel pode ser o Forward da Unity.
+                    // Vamos projetar a direção do marcador no plano horizontal do mundo.
+                    Vector3 projectedForward = Vector3.ProjectOnPlane(markerUp, Vector3.up); // Tente markerUp ou markerForward aqui se ficar virado errado
+
+                    if (projectedForward.sqrMagnitude > 0.001f)
+                    {
+                        finalRotation = Quaternion.LookRotation(projectedForward, Vector3.up);
+                    }
+                    else
+                    {
+                        finalRotation = Quaternion.identity;
+                    }
+
+                    // Aplica o Offset manual EM CIMA da rotação alinhada
+                    finalRotation = finalRotation * Quaternion.Euler(rotationOffset);
+                }
+                else
+                {
+                    // MODO "COLADO": O objeto segue exatamente a rotação do papel.
+                    // Se você inclinar o papel, o animal inclina.
+                    finalRotation = markerWorldRot * Quaternion.Euler(rotationOffset);
+                }
+
+                // Aplica transformações
+                instance.transform.rotation = finalRotation;
+                instance.transform.position = worldPos + (finalRotation * positionOffset);
+                instance.transform.localScale = worldScale;
             }
 
             // --- EFEITO DE CONFETE ---
@@ -495,16 +545,6 @@ public class ArUcoWordManager : MonoBehaviour
                 SpawnConfetti(worldPos);
                 hasCelebrated = true;
             }
-
-
-            // Aplica a rotação "em pé"
-            Vector3 markerForward = worldRot * Vector3.forward;
-            Quaternion standingRotation = Quaternion.LookRotation(markerForward, Vector3.up);
-            instance.transform.rotation = standingRotation;
-        }
-        else
-        {
-            activeWordData = null; // Palavra formada não está no banco de dados
         }
     }
 
@@ -522,19 +562,17 @@ public class ArUcoWordManager : MonoBehaviour
             if (ps != null)
             {
                 var main = ps.main;
-                main.startLifetime = 1.5f;   // partículas duram mais tempo
-                main.startSpeed = 1.0f;      // sobe devagar
-                main.gravityModifier = 0.1f; // cai bem devagar
+                main.startLifetime = 1.5f;
+                main.startSpeed = 1.0f;
+                main.gravityModifier = 0.1f;
 
                 var emission = ps.emission;
-                emission.rateOverTime = 10f; // mais partículas por segundo (opcional)
+                emission.rateOverTime = 10f;
             }
 
             Destroy(confetti, 3f);
         }
     }
-
-
 
     // --- Métodos de Limpeza ---
     void OnDestroy()
@@ -569,30 +607,4 @@ public class ArUcoWordManager : MonoBehaviour
     {
         Debug.LogError("OnSourceToMatHelperErrorOccurred " + errorCode + ":" + message);
     }
-
-    // --- FUNÇÕES DE ATALHO PARA OS BOTÕES ---
-
-    /// <summary>
-    /// Atalho para o botão "Fácil".
-    /// </summary>
-    //public void IniciarJogoFacil()
-    //{
-    //    StartGame(Dificuldade.Facil);
-    //}
-
-    ///// <summary>
-    ///// Atalho para o botão "Médio".
-    ///// </summary>
-    //public void IniciarJogoMedio()
-    //{
-    //    StartGame(Dificuldade.Medio);
-    //}
-
-    ///// <summary>
-    ///// Atalho para o botão "Difícil".
-    ///// </summary>
-    //public void IniciarJogoDificil()
-    //{
-    //    StartGame(Dificuldade.Dificil);
-    //}
 }
