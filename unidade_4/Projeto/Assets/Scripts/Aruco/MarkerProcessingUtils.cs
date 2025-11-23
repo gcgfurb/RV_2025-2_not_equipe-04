@@ -44,6 +44,8 @@ public static class MarkerProcessingUtils
                 double centerY = (points[0].y + points[1].y + points[2].y + points[3].y) / 4;
 
                 PoseData poseData = OpenCVARUtils.ConvertRvecTvecToPoseData(rvec, tvec);
+
+                Vector3 unityPos = poseData.Pos;
                 Quaternion unityRot = poseData.Rot;
 
                 allMarkers.Add(new ArUcoWordManager.DetectedMarker
