@@ -40,6 +40,7 @@ public class ArUcoWordManager : MonoBehaviour
     [Tooltip("Distância máxima (em metros) entre dois marcadores para serem parte do mesmo grupo.")]
     public float maxMarkerDistance = 0.1f;
 
+    // --- NOVO: CONFIGURAÇÕES DE ESTABILIDADE E POSICIONAMENTO ---
     [Header("Estabilidade e Posição (Correções)")]
     [Tooltip("Faz o objeto olhar sempre para a câmera (ignora rotação do papel). Ajuda muito na estabilidade.")]
     public bool faceCamera = true;
@@ -121,7 +122,8 @@ public class ArUcoWordManager : MonoBehaviour
     private readonly Scalar colorWrong = new(255, 0, 0, 255);   // Vermelho
 
 
-    // Enum de Dicionários (COMPLETO)
+
+
     public enum ArUcoDictionary
     {
         DICT_4X4_50 = Objdetect.DICT_4X4_50,
@@ -146,7 +148,12 @@ public class ArUcoWordManager : MonoBehaviour
     // Start
     void Start()
     {
-        currentDifficulty = GameManager.Instance.dificuldadeAtual;
+        // Se GameManager existir usa ele, senão usa padrão
+        if (GameManager.Instance != null)
+            currentDifficulty = GameManager.Instance.dificuldadeAtual;
+        else
+            currentDifficulty = Dificuldade.Facil;
+
         mainCamera = Camera.main;
         source2MatHelper = gameObject.GetComponent<MultiSource2MatHelper>();
         source2MatHelper.OutputColorFormat = Source2MatHelperColorFormat.RGBA;
@@ -216,9 +223,6 @@ public class ArUcoWordManager : MonoBehaviour
         ManageWordObject(new WordAnalysisResult { IsWordCorrect = false });
     }
 
-    /// <summary>
-    /// Função pública para o botão da UI tocar o som do animal ativo.
-    /// </summary>
     public void PlayCurrentWordSound()
     {
         if (activeWordData != null && activeWordData.somDoAnimal != null)
@@ -237,9 +241,6 @@ public class ArUcoWordManager : MonoBehaviour
 
     #endregion
 
-    /// <summary>
-    /// Sorteia uma nova palavra com base na dificuldade atual.
-    /// </summary>
     private void SortNewWord()
     {
         if (remainingWords == null || remainingWords.Count == 0)
@@ -291,7 +292,6 @@ public class ArUcoWordManager : MonoBehaviour
     // OnSourceToMatHelperInitialized
     public void OnSourceToMatHelperInitialized()
     {
-        Debug.Log("OnSourceToMatHelperInitialized");
         rgbaMat = source2MatHelper.GetMat();
         outputTexture = new Texture2D(rgbaMat.cols(), rgbaMat.rows(), TextureFormat.RGBA32, false);
         grayMat = new Mat(rgbaMat.rows(), rgbaMat.cols(), CvType.CV_8UC1);
@@ -311,7 +311,6 @@ public class ArUcoWordManager : MonoBehaviour
         camMatrix.put(2, 0, 0); camMatrix.put(2, 1, 0); camMatrix.put(2, 2, 1.0f);
         distCoeffs = new MatOfDouble(0, 0, 0, 0);
 
-        Debug.Log($"[LOG INICIALIZAÇÃO] Usando Marker Length de {markerLengthMeters} metros.");
         if (markerLengthMeters <= 0) markerLengthMeters = 0.1f;
 
         // Configuração dos Pontos 3D do Marcador
@@ -344,7 +343,6 @@ public class ArUcoWordManager : MonoBehaviour
             if (webCamHelper.IsFrontFacing())
             {
                 webCamHelper.FlipHorizontal = true;
-                Debug.LogWarning("--- WEBCAM FRONTAL DETECTADA --- Ativando 'FlipHorizontal' para corrigir espelhamento.");
             }
         }
 #endif
@@ -371,26 +369,20 @@ public class ArUcoWordManager : MonoBehaviour
                 return;
             }
 
-            // --- O JOGO ESTÁ ATIVO, EXECUTA A LÓGICA COMPLETA ---
-
-            // 3. Processa a imagem (converte para cinza e detecta)
+            // Processamento OpenCV
             Imgproc.cvtColor(rgbaMat, grayMat, Imgproc.COLOR_RGBA2GRAY);
             detector.detectMarkers(grayMat, corners, ids, rejectedCorners);
 
-            // 4. Converte os dados brutos do OpenCV em nossa lista de marcadores com pose 3D
             List<DetectedMarker> allMarkers = MarkerProcessingUtils.ProcessDetectedMarkers(
                 corners, ids, objectPoints, camMatrix, distCoeffs
             );
 
-            // 5. Filtra os marcadores para encontrar o maior grupo
             List<DetectedMarker> mainCluster = MarkerProcessingUtils.FindLargestCluster(allMarkers, maxMarkerDistance);
 
-            // 6. Analisa o grupo para formar a palavra e verificar se está correta
             WordAnalysisResult analysisResult = MarkerProcessingUtils.AnalyzeCluster(
                 mainCluster, correctWordData, codesDictionary
             );
 
-            // 7. Desenha o feedback (verde/vermelho) na imagem
             MarkerProcessingUtils.DrawMarkerFeedback(
                 rgbaMat, corners, analysisResult.SortedMarkers,
                 analysisResult.LetterCorrectness, colorCorrect, colorWrong
@@ -399,26 +391,14 @@ public class ArUcoWordManager : MonoBehaviour
             // Gerencia Objeto 3D com Suavização e Offset
             ManageWordObject(analysisResult);
 
-            // 9. Atualiza os textos da UI
-            if (wordOutputText != null)
-            {
-                wordOutputText.text = analysisResult.FormedWord;
-            }
+            if (wordOutputText != null) wordOutputText.text = analysisResult.FormedWord;
 
-            // 10. Exibe a imagem processada na tela
-            if (displayProcessedImage)
-            {
-                OpenCVMatUtils.MatToTexture2D(rgbaMat, outputTexture);
-            }
+            if (displayProcessedImage) OpenCVMatUtils.MatToTexture2D(rgbaMat, outputTexture);
 
-            // 11. Limpa a memória das Matrizes do OpenCV para o próximo frame
             CleanupFrameMemory();
         }
     }
 
-    /// <summary>
-    /// Limpa as Matrizes 'corners' e 'rejectedCorners' no final do frame.
-    /// </summary>
     private void CleanupFrameMemory()
     {
         foreach (var item in corners) item.Dispose();
@@ -429,6 +409,7 @@ public class ArUcoWordManager : MonoBehaviour
 
     /// <summary>
     /// Gerencia qual objeto 3D deve estar ativo, com base no 'WordAnalysisResult'.
+    /// APLICA CORREÇÕES DE POSIÇÃO E ROTAÇÃO AQUI.
     /// </summary>
     private void ManageWordObject(WordAnalysisResult result)
     {
@@ -488,9 +469,13 @@ public class ArUcoWordManager : MonoBehaviour
                 instance = Instantiate(prefab);
                 instantiatedWordObjects.Add(result.FormedWord, instance);
 
-                // Desativa NavMesh para não bugar a posição
+                //Desativa NavMeshAgent 
                 var agent = instance.GetComponent<UnityEngine.AI.NavMeshAgent>();
                 if (agent != null) agent.enabled = false;
+
+                //Desativa CharacterController
+                var charController = instance.GetComponent<CharacterController>();
+                if (charController != null) charController.enabled = false;
             }
 
             if (instance != null)
@@ -539,7 +524,7 @@ public class ArUcoWordManager : MonoBehaviour
                 instance.transform.localScale = worldScale;
             }
 
-            // --- EFEITO DE CONFETE ---
+            // Confetes
             if (!hasCelebrated)
             {
                 SpawnConfetti(worldPos);
