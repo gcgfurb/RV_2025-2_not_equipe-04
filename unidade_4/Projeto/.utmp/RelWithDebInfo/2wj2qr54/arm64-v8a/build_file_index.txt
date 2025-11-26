@@ -1,0 +1,2 @@
+C:\Users\User\Desktop\Micael\Furb\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Users\User\Desktop\Micael\Furb\RV_2025-2_not_equipe-04\unidade_4\Projeto\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt

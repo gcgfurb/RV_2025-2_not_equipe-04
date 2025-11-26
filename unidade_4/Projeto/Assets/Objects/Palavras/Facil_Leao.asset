@@ -21,3 +21,4 @@ MonoBehaviour:
   modelo3D: {fileID: 994537013139176287, guid: d3517ef964b038b4a8b796f8f3c79849, type: 3}
   dificuldade: 0
   scale: 3
+  rotacaoCorrecao: {x: 90, y: 180, z: 0}

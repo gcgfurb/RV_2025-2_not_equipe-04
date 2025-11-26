@@ -19,7 +19,7 @@ MonoBehaviour:
   - LI
   categoria: 0
   somDoAnimal: {fileID: 8300000, guid: 2537ce234d5ccf94a9bd4bf61db95d50, type: 3}
-  modelo3D: {fileID: 6073855695995191056, guid: c18682d3e4c3fbf4cbf14216af86a1d9,
-    type: 3}
+  modelo3D: {fileID: 994537013139176287, guid: d3517ef964b038b4a8b796f8f3c79849, type: 3}
   dificuldade: 1
-  scale: 25
+  scale: 3
+  rotacaoCorrecao: {x: 90, y: 180, z: 0}

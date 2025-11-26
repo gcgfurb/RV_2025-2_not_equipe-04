@@ -87,7 +87,6 @@ public class ArUcoWordManager : MonoBehaviour
 
     [Header("Debug Props")]
     public List<WordData> debugWordsDatabase;
-
     // --- Variáveis de Jogo ---
     private WordData correctWordData;
     private WordData activeWordData = null;
@@ -326,7 +325,7 @@ public class ArUcoWordManager : MonoBehaviour
         dictionary = Objdetect.getPredefinedDictionary((int)dictionaryName);
         detectorParameters = new DetectorParameters();
         detectorParameters.set_minDistanceToBorder(3);
-        detectorParameters.set_useAruco3Detection(true);
+        detectorParameters.set_useAruco3Detection(faceCamera);
         detectorParameters.set_cornerRefinementMethod(Objdetect.CORNER_REFINE_SUBPIX);
         detectorParameters.set_minSideLengthCanonicalImg(16);
         detectorParameters.set_errorCorrectionRate(0.8);
@@ -518,9 +517,10 @@ public class ArUcoWordManager : MonoBehaviour
                     finalRotation = markerWorldRot * Quaternion.Euler(rotationOffset);
                 }
 
-                // Aplica transformações
+                finalRotation *= Quaternion.Euler(data.rotacaoCorrecao);
                 instance.transform.rotation = finalRotation;
                 instance.transform.position = worldPos + (finalRotation * positionOffset);
+
                 instance.transform.localScale = worldScale;
             }
 

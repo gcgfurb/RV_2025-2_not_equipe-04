@@ -43,10 +43,11 @@ public static class MarkerProcessingUtils
                 double centerX = (points[0].x + points[1].x + points[2].x + points[3].x) / 4;
                 double centerY = (points[0].y + points[1].y + points[2].y + points[3].y) / 4;
 
-                PoseData poseData = OpenCVARUtils.ConvertRvecTvecToPoseData(rvec, tvec);
+                // PoseData poseData = OpenCVARUtils.ConvertRvecTvecToPoseData(rvec, tvec);
 
-                Vector3 unityPos = poseData.Pos;
-                Quaternion unityRot = poseData.Rot;
+                Vector3 unityPos;
+                Quaternion unityRot;
+                ConvertOpenCvPoseToUnity(rvec, tvec, out unityPos, out unityRot);
 
                 allMarkers.Add(new ArUcoWordManager.DetectedMarker
                 {
@@ -60,6 +61,33 @@ public static class MarkerProcessingUtils
         }
         return allMarkers;
     }
+
+    private static void ConvertOpenCvPoseToUnity(Mat rvec, Mat tvec, out Vector3 position, out Quaternion rotation)
+    {
+        // Rodrigues -> matriz 3x3
+        Mat rotMat = new Mat();
+        Calib3d.Rodrigues(rvec, rotMat);
+
+        // Matriz OpenCV
+        Matrix4x4 m = Matrix4x4.identity;
+        for (int y = 0; y < 3; y++)
+            for (int x = 0; x < 3; x++)
+                m[y, x] = (float)rotMat.get(y, x)[0];
+
+        m[0, 3] = (float)tvec.get(0, 0)[0];
+        m[1, 3] = (float)tvec.get(1, 0)[0];
+        m[2, 3] = (float)tvec.get(2, 0)[0];
+
+        Matrix4x4 convert = Matrix4x4.Scale(new Vector3(1, -1, 1));
+
+        Matrix4x4 unity = convert * m;
+
+        position = unity.GetColumn(3);
+        rotation = Quaternion.LookRotation(unity.GetColumn(2), unity.GetColumn(1));
+
+        rotMat.Dispose();
+    }
+
 
     public static List<ArUcoWordManager.DetectedMarker> FindLargestCluster(List<ArUcoWordManager.DetectedMarker> markers, float maxDist)
     {
@@ -105,7 +133,7 @@ public static class MarkerProcessingUtils
         }
         return largestCluster;
     }
-    
+
     /// <summary>
     /// Analisa um grupo de marcadores para formar uma palavra e verificar sua correção.
     /// </summary>
@@ -163,7 +191,7 @@ public static class MarkerProcessingUtils
             // Pega o índice original do marcador para encontrar seus cantos
             int originalIndex = sortedMarkers[i].originalCornersIndex;
             if (originalIndex >= allCorners.Count) continue;
-            
+
             // Decide a cor
             Scalar drawColor = letterCorrectness[i] ? colorCorrect : colorWrong;
 

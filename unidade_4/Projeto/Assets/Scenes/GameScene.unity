@@ -602,9 +602,9 @@ MonoBehaviour:
   dictionaryName: 8
   markerLengthMeters: 0.055
   maxMarkerDistance: 0.1
-  faceCamera: 1
-  useGravityAlignment: 1
-  smoothingFactor: 0.15
+  faceCamera: 0
+  useGravityAlignment: 0
+  smoothingFactor: 0.35
   rotationOffset: {x: 0, y: 180, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
   wordHintText: {fileID: 622120145}
@@ -616,8 +616,7 @@ MonoBehaviour:
   nextWordButton: {fileID: 455996621}
   confettiPrefab: {fileID: 3064453622967830428, guid: 4fe5d28f55ee41b439e29acf1c63d5ca,
     type: 3}
-  debugWordsDatabase:
-  - {fileID: 11400000, guid: 1a20a12a4aceca044aa606b145e85699, type: 2}
+  debugWordsDatabase: []
 --- !u!82 &305413973
 AudioSource:
   m_ObjectHideFlags: 0

@@ -22,3 +22,4 @@ MonoBehaviour:
     type: 3}
   dificuldade: 0
   scale: 3
+  rotacaoCorrecao: {x: 90, y: 180, z: 0}
